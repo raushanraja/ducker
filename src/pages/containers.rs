@@ -42,6 +42,7 @@ const R_KEY: Key = Key::Char('r');
 const S_KEY: Key = Key::Char('s');
 const G_KEY: Key = Key::Char('g');
 const L_KEY: Key = Key::Char('l');
+const F_KEY: Key = Key::Char('f');
 const SHIFT_G_KEY: Key = Key::Char('G');
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -60,6 +61,7 @@ pub struct Containers {
     list_state: TableState,
     modal: Option<BooleanModal<ModalTypes>>,
     stopping_containers: Arc<Mutex<HashSet<String>>>,
+    filtered: bool,
 }
 
 #[async_trait::async_trait]
@@ -134,6 +136,10 @@ impl Page for Containers {
                     .await?;
                 MessageResponse::Consumed
             }
+            F_KEY => {
+                self.filtered = !self.filtered;
+                MessageResponse::Consumed
+            }
             _ => MessageResponse::NotConsumed,
         };
         self.refresh().await?;
@@ -189,6 +195,7 @@ impl Containers {
             .add_input(format!("{G_KEY}"), "top".into())
             .add_input(format!("{SHIFT_G_KEY}"), "bottom".into())
             .add_input(format!("{L_KEY}"), "logs".into())
+            .add_input(format!("{F_KEY}"), "filter".into())
             .build();
 
         Self {
@@ -201,11 +208,15 @@ impl Containers {
             list_state: TableState::default(),
             modal: None,
             stopping_containers: Arc::new(Mutex::new(HashSet::new())),
+            filtered: true,
         }
     }
 
     async fn refresh(&mut self) -> Result<(), color_eyre::eyre::Error> {
-        self.containers = DockerContainer::list(&self.docker).await?;
+        match self.filtered {
+            false => self.containers = DockerContainer::list_running(&self.docker).await?,
+            true => self.containers = DockerContainer::list(&self.docker).await?,
+        }
         Ok(())
     }
 

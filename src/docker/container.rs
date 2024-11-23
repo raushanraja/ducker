@@ -102,6 +102,27 @@ impl DockerContainer {
             .await
             .context("unable to retrieve list of containers")?
             .into_iter()
+            .filter(|c| c.state.clone().unwrap_or_default().as_str().ne("exited"))
+            .map(Self::from)
+            .collect();
+
+        Ok(containers)
+    }
+
+    /// Lists all running containers present on a given docker daemon
+    ///
+    /// **Note:** While this returns all containers present, it will
+    /// return only the minimal set of values (those which aren't marked optional).
+    pub async fn list_running(docker: &bollard::Docker) -> Result<Vec<Self>> {
+        let containers = docker
+            .list_containers(Some(ListContainersOptions::<String> {
+                all: true,
+                ..Default::default()
+            }))
+            .await
+            .context("unable to retrieve list of containers")?
+            .into_iter()
+            .filter(|c| c.state.clone().unwrap_or_default().as_str().ne("exited"))
             .map(Self::from)
             .collect();
 
