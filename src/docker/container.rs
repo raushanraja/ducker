@@ -102,7 +102,6 @@ impl DockerContainer {
             .await
             .context("unable to retrieve list of containers")?
             .into_iter()
-            .filter(|c| c.state.clone().unwrap_or_default().as_str().ne("exited"))
             .map(Self::from)
             .collect();
 

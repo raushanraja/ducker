@@ -195,7 +195,7 @@ impl Containers {
             .add_input(format!("{G_KEY}"), "top".into())
             .add_input(format!("{SHIFT_G_KEY}"), "bottom".into())
             .add_input(format!("{L_KEY}"), "logs".into())
-            .add_input(format!("{F_KEY}"), "filter".into())
+            .add_input(format!("{F_KEY}"), "filter: !exited".into())
             .build();
 
         Self {
